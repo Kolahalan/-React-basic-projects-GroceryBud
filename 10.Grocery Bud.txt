@@ -1,0 +1,125 @@
+Objectives
+Enter some items as a Grocery List, If it is entered, a small notify component should come up on the top saying, Item entered
+The entered item should also appear on the list below with edit and delete button.
+If it is edited, The changed item should appear on the list with the notify component in red
+If it is deleted, it should be deleted from the list, with the notify component coming up in red specifying item deleted
+Also persist the items using Local Storage.
+
+Steps:
+1.Set states,
+  name //for linking with form input
+  list //for list items
+  isEditing // for Editing Flag
+  editId //To find the id of element thatis being edited
+  alert //This is state object with fields {show:,msg:,type:} type is just a classname from bootstrap to display green and red as success and danger
+
+
+2. Create a form Element with submit button and handleSubmit func with preventDefault within it.
+   const handleSubmit = (e) =>{ //e is the event object
+   e.preventDefault() //This is to prevent the page from default reloading when form submit is clicked. e (EVENT) should be passed into it
+   console.log('hello')
+  }
+3. Create a input element and link it to name 
+<input type="text" placeholder="e.g.Eggs" value={name} onChange={(e)=>setName(e.target.value)}/>
+
+4. onSubmit, the handleSubmit is invoked. Inside it if name is empty or name has value and isEditing is true or name has value and is needed to be added to list
+   If name has value and is needed to be added to the list, set up appropriate alert (comes down the lane)
+   create a new object as const newitem = {id: new Date().getTime().toString(), title: name} //name is set here to tile: and id: is set and added to list array.
+   Then, setList(...list,newitem)		
+
+5. This list array is then sent as a prop to List component.
+6. Conditional rendering is implemented to make sure the List component is rendered only when list array has elements. such as  
+    as {list.length >0 &&
+       (<div className='grocery-container'>
+      <List items={list}/>
+      <button type="button" className='clear-btn' onClick={()=>setList([])}>clear button</button>
+    </div>)
+}
+	This makes the List component to get rendered only when list.length >0
+
+//----------------Setting Up the Alert component---------------------------//
+7.Setting up a showAlert func to pass in props to set and call it directly without prop to assign defaults 
+const showAlert = (show = false, type = '', msg = '') => { 
+    setAlert({ show, type, msg });
+  };
+So whenever we pass as showAlert(true,"success","message edited") or showAlert(true,"danger","element deleted"), the appropriate values are set inside it
+
+
+8. Send props of alert, list and showAlert func into the alert Component
+<Alert {...alert} removeAlert={showAlert} list={list} />}
+
+9. Unfurl props inside the alert component, use setTimeout and cleartTimeout in useEffect with List added as a dependency
+const Alert = ({ type, msg, removeAlert, list }) => {
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      removeAlert();
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [list]);
+  return <p className={`alert alert-${type}`}>{msg}</p>;
+}; 
+
+
+
+10. Add edititem(id) and removeitem(id) for buttons of List Component 
+11.Define their logic in App.js and pass them as prop value to List Component 
+EDIT ITEM LOGIC  
+const editItem = (id) => {
+    const specificItem = list.find((item) => item.id === id);
+    setIsEditing(true);
+    setEditID(id);
+    setName(specificItem.title);
+  };
+REMOVE ITEM LOGIC
+ const removeItem = (id) => {
+    showAlert(true, 'danger', 'item removed');
+    setList(list.filter((item) => item.id !== id));
+  };
+
+12. Logic for persisting values inside localstorage
+a. To get the items from localstorage
+const getLocalStorage = () => {
+  let list = localStorage.getItem('list');
+  if (list) {
+    return (list = JSON.parse(localStorage.getItem('list')));
+  } else {
+    return [];
+  }
+};
+Here in if condition, if there are somevalues in list, that is parsed into JSON and retrived. But when it is empty, we return a empty array
+
+b.To set the list everytime some changes are made to it, we set it up on useEffect with a list dependency added to it.
+  useEffect(() => {
+    localStorage.setItem('list', JSON.stringify(list));
+  }, [list]);
+
+//----------------------------
+Note: 
+Syntax to remember 
+1.When you iterate in a return statement, as items.map((item)=>{}), it should be inside a element.
+You cant use it directly within a return statement as 
+return(
+items.map((item)=>{}) //This will throw a error
+)
+
+
+2.const specificItem = list.find((item) => item.id === id); //For finding a specific item.
+ 
+ Also take a note of items.filter((item)=> item.id === id) and items.filter((item)=> item.id !== id) used in the previous projects
+
+3. useEffect(() => {
+    const timeout = setTimeout(() => {
+      removeAlert();
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [list]); 
+ Remember, We used setIntrerval and clearInterval before to automatically increment index for every 3 seconds.
+ Here we are using setTimeout for a component to be alive for 3 seconds
+
+4. REMEMBER, Important 
+Setting up a showAlert func to pass in props to set and call it directly without prop to assign defaults 
+const showAlert = (show = false, type = '', msg = '') => { 
+    setAlert({ show, type, msg });
+  };
+So whenever we pass as showAlert(true,"success","message edited") or showAlert(true,"danger","element deleted"), the appropriate values are set inside it
+
